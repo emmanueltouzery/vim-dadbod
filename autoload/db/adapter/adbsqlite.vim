@@ -11,7 +11,9 @@ function! db#adapter#adbsqlite#output_extension(...) abort
 endfunction
 
 function! db#adapter#adbsqlite#input(url, in) abort
-  return ['bash', '-c', "adb shell \" echo '$(<" . a:in . ")' | sqlite3 -column -header " . db#url#file_path(a:url) . "\""]
+  let parsed = db#url#parse(a:url)
+  let flag = has_key(parsed.params, 'adb_flag') ? parsed.params.adb_flag : ''
+  return ['bash', '-c', "adb " . flag . " shell \" echo '$(<" . a:in . ")' | sqlite3 -column -header " . db#url#file_path(a:url) . "\""]
 endfunction
 
 function! db#adapter#adbsqlite#auth_input() abort
