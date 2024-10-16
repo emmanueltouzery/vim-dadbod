@@ -13,7 +13,12 @@ endfunction
 function! db#adapter#adbsqlite#input(url, in) abort
   let parsed = db#url#parse(a:url)
   let flag = has_key(parsed.params, 'adb_flag') ? parsed.params.adb_flag : ''
-  return ['bash', '-c', "adb " . flag . " shell \" echo '$(<" . a:in . ")' | sqlite3 -column -header " . db#url#file_path(a:url) . "\""]
+  " at first i had -column but it's buggy with multibyte: https://sqlite.org/forum/forumpost/d443792afc
+  " so use column to align the columns+awk to add a separator line between
+  " headers and contents.
+  " About the awk gsub: https://stackoverflow.com/a/68371463/516188
+  " the dos2unix is laziness. fs there is a better way...
+  return ['bash', '-c', "adb " . flag . " shell \" echo '$(<" . a:in . ")' | sqlite3 -header " . db#url#file_path(a:url) . "\" | column -t '-s|' '-o │ ' | awk 'NR == 2 { s = sprintf(\"%*s\\n\", length($0), \"\"); gsub(\".\", \"═\", s); print(s); } { print }' | dos2unix"]
 endfunction
 
 function! db#adapter#adbsqlite#auth_input() abort
