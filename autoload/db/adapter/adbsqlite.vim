@@ -18,7 +18,10 @@ function! db#adapter#adbsqlite#input(url, in) abort
   " headers and contents.
   " About the awk gsub: https://stackoverflow.com/a/68371463/516188
   " the dos2unix is laziness. fs there is a better way...
-  return ['bash', '-c', "adb " . flag . " shell \" echo '$(<" . a:in . ")' | sqlite3 -header " . db#url#file_path(a:url) . "\" | column -t '-s|' '-o │ ' | awk 'NR == 2 { s = sprintf(\"%*s\\n\", cols, \"\"); gsub(\".\", \"═\", s); print(s); } { if (length($0) > cols) {cols = length($0)}; print }' | dos2unix"]
+  " regarding the column_mode.. when '.mode line' is active, we don't want to
+  " add the ====== separator line. We detect that through = on the first line,
+  " since in column mode the first line will contain "key = value".
+  return ['bash', '-c', "adb " . flag . " shell \" echo '$(<" . a:in . ")' | sqlite3 -header " . db#url#file_path(a:url) . "\" | column -t '-s|' '-o │ ' | awk 'NR == 1 && $0 ~ / = / {column_mode = 1;}; NR == 2 && column_mode != 1 { s = sprintf(\"%*s\\n\", cols, \"\"); gsub(\".\", \"═\", s); print(s); } { if (length($0) > cols) {cols = length($0)}; print }' | dos2unix"]
 endfunction
 
 function! db#adapter#adbsqlite#auth_input() abort
