@@ -421,7 +421,7 @@ function! s:init() abort
   let b:db = query
   let b:dadbod = query
   let w:db = b:db.db_url
-  setlocal nowrap nolist readonly nomodifiable nobuflisted bufhidden=delete
+  setlocal nowrap nolist readonly nomodifiable bufhidden=delete
   let &l:statusline = substitute(&statusline, '%\([^[:alpha:]{!]\+\)[fFt]', '%\1{db#url#safe_format(b:db.db_url)}', '')
   if empty(mapcheck('q', 'n'))
     nnoremap <buffer><silent> q :echoerr "DB: q map has been replaced by gq"<CR>
